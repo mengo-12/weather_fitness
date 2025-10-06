@@ -18,7 +18,7 @@ export default function InstructionsPage({ onNext }) {
         if (accepted === "true") {
             // إذا وافق مسبقاً انتقل مباشرة للصفحة التالية
             if (onNext) onNext();
-            else router.push("/home"); // غيّر المسار حسب مشروعك
+            else router.push("../questions"); // غيّر المسار حسب مشروعك
         } else {
             setLoading(false);
         }
@@ -27,7 +27,7 @@ export default function InstructionsPage({ onNext }) {
     const handleNext = () => {
         localStorage.setItem("acceptedInstructions", "true");
         if (onNext) onNext();
-        else router.push("/home");
+        else router.push("/questions");
     };
 
     if (loading) return null;

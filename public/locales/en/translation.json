@@ -9,7 +9,6 @@
         "btn_login": "login or register",
 
 
-        
         "title": "General instructions we hope you will follow during the study",
         "line1": "",
         "item1": "Perform a gradual warm-up before starting the training session.",
@@ -19,5 +18,36 @@
         "item5": "Make sure to sleep 7–9 hours.",
         "note": "If you have read carefully, press 'Next'.",
         "agree": "I have read and agree to the instructions",
-        "next": "Next"
+        "next": "Next",
+        
+
+        "title2": "Pre-Training Questionnaire",
+        "q1": "What is the training time today? (Required)",
+        "q1Placeholder": "Enter training time",
+        "q2": "How many hours did you sleep last night?",
+        "opt21": "Less than 5 hours",
+        "opt22": "5 to 7 hours",
+        "opt23": "More than 7 hours",
+        "q3": "Do you feel ready for training today?",
+        "opt31": "Yes, completely",
+        "opt32": "Somewhat",
+        "opt33": "Not sure",
+        "opt34": "No, I feel unready",
+        "q4": "What type of field surface will you be training on today?",
+        "opt41": "Natural grass",
+        "opt42": "Artificial turf",
+        "opt43": "Dirt field",
+        "opt44": "Other (please specify)",
+        "q5": "What was the level of effort you put into training this week?",
+        "opt51": "Very light effort (less than 40%)",
+        "opt52": "Low to moderate effort (40% – 70%)",
+        "opt53": "High effort (70% – 90%)",
+        "opt54": "Very high effort (90% – 100%)",
+        "q6": "How do you currently feel physically?",
+        "opt61": "I feel fully energized with no symptoms",
+        "opt62": "I have mild fatigue with no pain or performance impact",
+        "opt63": "I feel some pain or muscle tightness",
+        "opt64": "I feel extremely fatigued or clearly injured",
+        "submit": "Submit",
+        "thankYou": "Your answers have been saved successfully, thank you!"
 }
