@@ -1,0 +1,22 @@
+{
+        "register_title": "Trainee Registration",
+        "register_description": "Enter your details to join the training program",
+        "full_name": "Full Name",
+        "password": "Password",
+        "terms_agreement": "I agree to the Terms & Conditions",
+        "create_account": "Create Account",
+        "loading": "Creating...",
+
+
+        
+        "title": "General instructions we hope you will follow during the study",
+        "line1": "",
+        "item1": "Perform a gradual warm-up before starting the training session.",
+        "item2": "Take a break to drink fluids every 20 minutes.",
+        "item3": "Wear appropriate footwear for the playing surface during training.",
+        "item4": "Ensure you perform stretching exercises after completing the training session.",
+        "item5": "Make sure to sleep 7–9 hours.",
+        "note": "If you have read carefully, press 'Next'.",
+        "agree": "I have read and agree to the instructions",
+        "next": "Next"
+}
