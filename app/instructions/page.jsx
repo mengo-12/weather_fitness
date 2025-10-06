@@ -1,24 +1,47 @@
 'use client';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { useRouter } from "next/navigation";
 import LanguageSwitcher from "../../app/components/LanguageSwitcher";
 import ThemeSwitcher from "../../app/components/ThemeSwitcher";
 
 export default function InstructionsPage({ onNext }) {
     const { t, i18n } = useTranslation("common");
     const [agreed, setAgreed] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const router = useRouter();
+
+    useEffect(() => {
+        // تحقق هل المستخدم وافق مسبقاً
+        const accepted = localStorage.getItem("acceptedInstructions");
+        if (accepted === "true") {
+            // إذا وافق مسبقاً انتقل مباشرة للصفحة التالية
+            if (onNext) onNext();
+            else router.push("/home"); // غيّر المسار حسب مشروعك
+        } else {
+            setLoading(false);
+        }
+    }, [router, onNext]);
+
+    const handleNext = () => {
+        localStorage.setItem("acceptedInstructions", "true");
+        if (onNext) onNext();
+        else router.push("/home");
+    };
+
+    if (loading) return null;
 
     return (
         <div
             dir={i18n.language === "ar" ? "rtl" : "ltr"}
-            className="min-h-screen flex items-center justify-center p-4 bg-gray-100 dark:bg-gray-900 transition-colors duration-500"
+            className="min-h-screen flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-900 transition-colors duration-500"
         >
             <motion.div
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-lg rounded-3xl p-8 sm:p-10 w-full max-w-lg transition-colors duration-500"
+                className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-xl rounded-3xl p-8 sm:p-10 w-full max-w-lg transition-colors duration-500"
             >
                 <div className="flex justify-between items-center mb-6">
                     <LanguageSwitcher />
@@ -48,13 +71,16 @@ export default function InstructionsPage({ onNext }) {
                         onChange={(e) => setAgreed(e.target.checked)}
                         className="w-5 h-5 accent-emerald-500 cursor-pointer"
                     />
-                    <label htmlFor="agree" className="ml-2 text-gray-700 dark:text-gray-300 text-sm flex items-center gap-2 cursor-pointer">
+                    <label
+                        htmlFor="agree"
+                        className="ml-2 text-gray-700 dark:text-gray-300 text-sm flex items-center gap-2 cursor-pointer"
+                    >
                         {t("agree")}
                     </label>
                 </div>
 
                 <motion.button
-                    onClick={onNext}
+                    onClick={handleNext}
                     disabled={!agreed}
                     whileTap={{ scale: 0.96 }}
                     whileHover={{ scale: agreed ? 1.02 : 1 }}

@@ -610,7 +610,7 @@ export default function AuthPage() {
                         type="submit"
                         disabled={!form.agreed || loading}
                     >
-                        {loading ? t("loading") : t("login_or_register")}
+                        {loading ? t("loading") : t("btn_login")}
                     </motion.button>
                 </form>
             </motion.div>
