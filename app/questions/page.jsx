@@ -206,18 +206,18 @@
 
 
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/navigation';
 import ThemeSwitcher from '../../app/components/ThemeSwitcher';
 import LanguageSwitcher from '../../app/components/LanguageSwitcher';
 
-const API_KEY = '2ce3fe36155b6e3a81cd25f33ba25e10';
 
 export default function QuestionsPage() {
     const { t, i18n } = useTranslation('common');
     const router = useRouter();
+
     const [answers, setAnswers] = useState({
         trainingTime: '',
         sleepHours: '',
@@ -227,7 +227,13 @@ export default function QuestionsPage() {
         effortLevel: '',
         bodyFeeling: '',
     });
+
     const [loadingWeather, setLoadingWeather] = useState(false);
+    const [locationError, setLocationError] = useState('');
+    const [weather, setWeather] = useState(null);
+
+    // 🧭 اكتشاف نوع المتصفح لتحديد الدقة
+    const isEdge = typeof navigator !== 'undefined' && /Edg/i.test(navigator.userAgent);
 
     const handleChange = (key, value) => {
         setAnswers(prev => ({ ...prev, [key]: value }));
@@ -241,74 +247,126 @@ export default function QuestionsPage() {
         answers.effortLevel &&
         answers.bodyFeeling;
 
-    const fetchWeather = async (lat, lon) => {
-        try {
-            const res = await fetch(
-                `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}`
-            );
-            const data = await res.json();
-            return { temperature: data.main.temp, humidity: data.main.humidity };
-        } catch (err) {
-            console.error(err);
-            return { temperature: null, humidity: null };
-        }
-    };
+    // 🌤️ جلب الطقس عند الدخول
+    useEffect(() => {
+        const fetchWeather = async (lat, lon) => {
+            try {
+                const res = await fetch(
+                    `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}&lang=ar`
+                );
+                const data = await res.json();
+                setWeather({
+                    temperature: data.main?.temp ?? null,
+                    humidity: data.main?.humidity ?? null,
+                    city: data.name ?? 'غير محدد',
+                    condition: data.weather?.[0]?.description ?? '',
+                });
+            } catch (err) {
+                console.error('⚠️ خطأ في جلب بيانات الطقس:', err);
+                setWeather({ temperature: null, humidity: null, city: 'غير محدد', condition: '' });
+            }
+        };
+
+        const getLocation = async () => {
+            setLoadingWeather(true);
+            setLocationError('');
+            let lat = 24.7136, lon = 46.6753; // الرياض افتراضيًا
+
+            if (navigator.geolocation) {
+                await new Promise(resolve => {
+                    navigator.geolocation.getCurrentPosition(
+                        pos => {
+                            lat = pos.coords.latitude;
+                            lon = pos.coords.longitude;
+                            console.log('✅ موقع المستخدم:', lat, lon);
+                            resolve(true);
+                        },
+                        err => {
+                            console.warn('⚠️ تعذر تحديد الموقع:', err);
+                            switch (err.code) {
+                                case err.PERMISSION_DENIED:
+                                    setLocationError('يرجى السماح بالوصول إلى الموقع.');
+                                    break;
+                                case err.POSITION_UNAVAILABLE:
+                                    setLocationError('تعذر تحديد الموقع بدقة.');
+                                    break;
+                                case err.TIMEOUT:
+                                    setLocationError('انتهت مهلة تحديد الموقع، تم استخدام الموقع الافتراضي (الرياض).');
+                                    break;
+                                default:
+                                    setLocationError('حدث خطأ أثناء تحديد الموقع.');
+                            }
+                            resolve(true);
+                        },
+                        {
+                            enableHighAccuracy: !isEdge, // إلغاء الدقة العالية في Edge لتجنب الخطأ
+                            timeout: 15000,
+                            maximumAge: 0,
+                        }
+                    );
+                });
+            } else {
+                setLocationError('المتصفح لا يدعم تحديد الموقع الجغرافي.');
+            }
+
+            await fetchWeather(lat, lon);
+            setLoadingWeather(false);
+        };
+
+        getLocation();
+    }, [isEdge]);
 
     const handleSubmit = async () => {
-        if (!isComplete) return;
-        setLoadingWeather(true);
+        if (!isComplete || !weather) return;
 
-        let lat = 24.7136; // الرياض كافتراضية
-        let lon = 46.6753;
-
-        if (navigator.geolocation) {
-            await new Promise(resolve => {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        lat = position.coords.latitude;
-                        lon = position.coords.longitude;
-                        resolve(true);
-                    },
-                    (error) => {
-                        console.warn('تعذر جلب موقعك الحالي. سيتم استخدام الإعدادات الافتراضية.');
-                        resolve(true);
-                    },
-                    { timeout: 10000 }
-                );
-            });
-        }
-
-        const weatherData = await fetchWeather(lat, lon);
-        setLoadingWeather(false);
-
-        // تحويل البيانات إلى query string يدوياً
         const query = new URLSearchParams({
             answers: JSON.stringify(answers),
-            temperature: weatherData.temperature,
-            humidity: weatherData.humidity
+            temperature: weather.temperature ?? '',
+            humidity: weather.humidity ?? '',
+            city: weather.city,
+            condition: weather.condition,
         }).toString();
 
         router.push(`/TrainingAssessment?${query}`);
     };
 
     return (
-        <div dir={i18n.language === 'ar' ? 'rtl' : 'ltr'} className="min-h-screen flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-900 transition-colors duration-500">
+        <div
+            dir={i18n.language === 'ar' ? 'rtl' : 'ltr'}
+            className="min-h-screen flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-900 transition-colors duration-500"
+        >
             <motion.div
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-xl rounded-3xl p-6 sm:p-10 w-full max-w-2xl transition-colors duration-500"
+                className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-xl rounded-3xl p-6 sm:p-10 w-full max-w-2xl"
             >
                 <div className="flex justify-between items-center mb-6">
                     <LanguageSwitcher />
                     <ThemeSwitcher />
                 </div>
 
-                <h1 className="text-2xl font-bold text-gray-800 dark:text-white text-center mb-8">
+                <h1 className="text-2xl font-bold text-gray-800 dark:text-white text-center mb-6">
                     📝 {t('title2')}
                 </h1>
 
-                <form className="space-y-8 text-gray-800 dark:text-gray-200 text-sm">
+                {/* 🌦️ معلومات الطقس
+                <div className="text-center mb-6">
+                    {loadingWeather ? (
+                        <p>🔍 جاري تحديد موقعك وجلب حالة الطقس...</p>
+                    ) : weather ? (
+                        <>
+                            <p>📍 <b>{weather.city}</b></p>
+                            <p>🌡️ درجة الحرارة: <b>{weather.temperature}°C</b></p>
+                            <p>💧 الرطوبة: <b>{weather.humidity}%</b></p>
+                            {weather.condition && <p>☁️ الحالة: {weather.condition}</p>}
+                        </>
+                    ) : (
+                        <p className="text-gray-500">لم يتم تحديد حالة الطقس بعد.</p>
+                    )}
+                </div> */}
+
+                <form className="space-y-6 text-gray-800 dark:text-gray-200 text-sm">
                     {/* سؤال 1 */}
                     <div>
                         <label className="block font-semibold mb-3">
@@ -433,17 +491,26 @@ export default function QuestionsPage() {
                             ))}
                         </div>
                     </div>
+                    {locationError && (
+                        <p className="text-red-500 text-sm text-center mt-4">
+                            ⚠️ {locationError}
+                        </p>
+                    )}
+
+                    <motion.button
+                        type="button"
+                        onClick={handleSubmit}
+                        disabled={!isComplete || loadingWeather}
+                        whileTap={{ scale: 0.96 }}
+                        whileHover={{ scale: isComplete ? 1.02 : 1 }}
+                        className={`w-full mt-6 py-3 rounded-2xl font-semibold text-lg transition-all duration-200 shadow-md ${isComplete && !loadingWeather
+                                ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                                : 'bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed'
+                            }`}
+                    >
+                        {loadingWeather ? '🔍 جاري تحديد موقعك...' : t('submit')}
+                    </motion.button>
                 </form>
-                <motion.button
-                    type="button"
-                    onClick={handleSubmit}
-                    disabled={!isComplete || loadingWeather}
-                    whileTap={{ scale: 0.96 }}
-                    whileHover={{ scale: isComplete ? 1.02 : 1 }}
-                    className={`w-full mt-6 py-3 rounded-2xl font-semibold text-lg transition-all duration-200 shadow-md ${isComplete && !loadingWeather ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed'}`}
-                >
-                    {loadingWeather ? 'جاري جلب الطقس...' : t('submit')}
-                </motion.button>
             </motion.div>
         </div>
     );
