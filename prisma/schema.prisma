@@ -15,7 +15,10 @@ generator client {
 
 model Trainee {
   id        String   @id @default(cuid())   // معرف فريد لكل متدرب
-  name      String   @db.VarChar(255)       // تحديد الطول الافتراضي للحقل
-  password  String   @db.VarChar(255)       // كلمة المرور مخزنة بشكل نص مشفر لاحقًا
-  createdAt DateTime @default(now())        // تاريخ التسجيل
+  name      String   @db.VarChar(255)       // اسم المتدرب
+  phone     String   @unique @db.VarChar(20)        // رقم الجوال
+  age       Int                               // العمر
+  agreed    Boolean  @default(false)         // الموافقة على الشروط
+  hasSeenInstructions Boolean @default(false)
+  createdAt DateTime @default(now())         // تاريخ التسجيل
 }

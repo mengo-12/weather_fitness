@@ -215,14 +215,12 @@ export default function TrainingReport() {
     useEffect(() => {
         const fetchWeather = async (lat, lon) => {
             try {
-                // تحقق من البيانات المخزنة مسبقًا
                 const cacheKey = `weather_${lat}_${lon}`;
                 const cached = localStorage.getItem(cacheKey);
                 const now = new Date().getTime();
 
                 if (cached) {
                     const cachedData = JSON.parse(cached);
-                    // إذا لم يتجاوز عمر البيانات 30 دقيقة
                     if (now - cachedData.timestamp < 30 * 60 * 1000) {
                         setWeather(cachedData.weather);
                         return;
@@ -244,29 +242,28 @@ export default function TrainingReport() {
                         wind: data.current.wind_kph
                     };
                     setWeather(weatherObj);
-
-                    // حفظ البيانات في localStorage
                     localStorage.setItem(cacheKey, JSON.stringify({
                         timestamp: now,
                         weather: weatherObj
                     }));
                 } else {
                     console.error("⚠️ لم يتم العثور على بيانات الطقس:", data);
+                    setError('تعذر جلب بيانات الطقس حالياً.');
                 }
             } catch (err) {
                 console.error('❌ خطأ في جلب بيانات الطقس:', err);
+                setError('حدث خطأ أثناء جلب بيانات الطقس.');
             }
         };
 
-        // 🔹 تحديد موقع المستخدم بدقّة عالية
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
                     fetchWeather(pos.coords.latitude, pos.coords.longitude);
                 },
                 (err) => {
-                    console.warn("⚠️ تعذر تحديد الموقع بدقة:", err);
-                    // fetchWeather(21.3891, 39.8579); // مكة
+                    console.warn("⚠️ رفض المستخدم الوصول إلى الموقع أو حدث خطأ:", err);
+                    setError('⚠️ لم يتم السماح بالوصول إلى موقعك، لا يمكن عرض بيانات الطقس.');
                 },
                 {
                     enableHighAccuracy: true,
@@ -275,7 +272,7 @@ export default function TrainingReport() {
                 }
             );
         } else {
-            fetchWeather(21.3891, 39.8579);
+            setError('❌ المتصفح لا يدعم تحديد الموقع الجغرافي.');
         }
     }, []);
 
@@ -306,17 +303,20 @@ export default function TrainingReport() {
         return { rating: t('excellent', 'ممتاز'), advice: t('sleepAdviceHigh', '- متابعة التدريب المعتاد.') };
     };
     const assessReadiness = (val) => {
-        switch (val) {
-            case 'نعم، تمامًا': return { rating: t('good', 'جيد'), advice: t('readinessYesAdvice', '- متابعة التدريب المعتاد.') };
-            case 'نوعًا ما': return { rating: t('medium', 'متوسط'), advice: t('readinessSomewhatAdvice', '- تدريب معتدل، مراقبة التعب.') };
-            case 'لست متأكدًا': return { rating: t('caution', 'حذر'), advice: t('readinessNotSureAdvice', '- تدريب خفيف، زيادة فترات الراحة عند الحاجة.') };
-            case 'لا، أشعر بعدم الجاهزية': return { rating: t('danger', 'خطر'), advice: t('readinessNoAdvice', '- تأجيل التمرين أو استبداله بتمارين استشفاء خفيفة.') };
-            default: return { rating: '-', advice: '-' };
-        }
+        if (!val) return { rating: '-', advice: '-' };
+        if (val.includes('نعم')) return { rating: t('good', 'جيد'), advice: t('readinessYesAdvice', '- متابعة التدريب المعتاد.') };
+        if (val.includes('نوعًا ما')) return { rating: t('medium', 'متوسط'), advice: t('readinessSomewhatAdvice', '- تدريب معتدل، مراقبة التعب.') };
+        if (val.includes('لست متأكدًا')) return { rating: t('caution', 'حذر'), advice: t('readinessNotSureAdvice', '- تدريب خفيف، زيادة فترات الراحة عند الحاجة.') };
+        if (val.includes('لا')) return { rating: t('danger', 'خطر'), advice: t('readinessNoAdvice', '- تأجيل التمرين أو استبداله بتمارين استشفاء خفيفة.') };
+        return { rating: '-', advice: '-' };
     };
+
+
     const assessField = (val) => val === 'أخرى'
         ? { rating: t('caution', 'حذر'), advice: t('fieldOtherAdvice', '- اختيار الحذاء والتجهيزات الواقية.') }
         : { rating: t('good', 'جيد'), advice: t('fieldNormalAdvice', '- استخدام الحذاء المناسب.') };
+
+
     const assessEffort = (val) => {
         switch (val) {
             case 'جهد خفيف جداً (أقل من 40%)': return { rating: t('safe', 'آمن'), advice: t('effortLowAdvice', '- متابعة التدريب المعتاد.') };
@@ -326,6 +326,8 @@ export default function TrainingReport() {
             default: return { rating: '-', advice: '-' };
         }
     };
+
+
     const assessBody = (val) => {
         switch (val) {
             case 'أشعر بنشاط كامل وبدون أعراض': return { rating: t('safe', 'آمن'), advice: t('bodyHealthyAdvice', '- متابعة التدريب المعتاد.') };
@@ -335,11 +337,13 @@ export default function TrainingReport() {
             default: return { rating: '-', advice: '-' };
         }
     };
+
     const assessTemperature = (temp) => {
         if (temp <= 30) return { rating: t('safe', 'آمن'), advice: t('tempSafeAdvice', '- متابعة التدريب المعتاد.') };
         if (temp <= 34) return { rating: t('medium', 'متوسطة (حذر)'), advice: t('tempMedAdvice', '- تقليل شدة التدريب تدريجيًا.') };
         return { rating: t('unsafe', 'غير آمن'), advice: t('tempUnsafeAdvice', '- تغيير وقت التمرين أو تقليل شدته.') };
     };
+    
     const assessHumidity = (hum) => {
         if (hum <= 60) return { rating: t('safe', 'آمنة'), advice: t('humiditySafeAdvice', '- التدريب طبيعي.') };
         if (hum <= 70) return { rating: t('medium', 'متوسطة (حذر)'), advice: t('humidityMedAdvice', '- شرب السوائل بانتظام وأخذ فترات راحة.') };
@@ -374,10 +378,15 @@ export default function TrainingReport() {
                 </h1>
 
                 <div className="text-center mb-6">
-                    <p>📍 <b>{city}</b></p>
-                    <p>🌡️ {temperature}°C | 💧 {humidity}% | 💨 {wind} كم/س</p>
-                    {desc && <p>☁️ {desc}</p>}
-                    {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+                    {weather ? (
+                        <>
+                            <p>📍 <b>{city}</b></p>
+                            <p>🌡️ {temperature}°C | 💧 {humidity}% | 💨 {wind} كم/س</p>
+                            {desc && <p>☁️ {desc}</p>}
+                        </>
+                    ) : (
+                        <p className="text-red-500 text-sm mt-2">{error || 'جاري تحميل بيانات الطقس...'}</p>
+                    )}
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
