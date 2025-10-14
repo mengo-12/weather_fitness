@@ -6,6 +6,7 @@ import { Dumbbell, ShieldCheck, Phone, AlertCircle, Calendar, Info } from "lucid
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from "../app/components/LanguageSwitcher";
 import ThemeSwitcher from "../app/components/ThemeSwitcher";
+import { signIn, useSession } from "next-auth/react";
 
 export default function AuthPage() {
     const router = useRouter();
@@ -47,177 +48,220 @@ export default function AuthPage() {
         setErrors({ ...errors, [name]: "" });
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!validate()) return;
+    // const handleSubmit = async (e) => {
+    //     e.preventDefault();
+    //     if (!validate()) return;
 
-        if (Number(form.age) < 18) {
-            alert(t("validation_age_min"));
-            return;
-        }
+    // if (Number(form.age) < 18) {
+    //     alert(t("validation_age_min"));
+    //     return;
+    // }
 
-        setLoading(true);
-        try {
-            const res = await fetch("/api/trainee/auth", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    name: form.name,
-                    phone: form.phone,
-                    age: Number(form.age)
-                }),
-            });
+    //     setLoading(true);
+    //     try {
+    //         const res = await fetch("/api/auth", {
+    //             method: "POST",
+    //             headers: { "Content-Type": "application/json" },
+    //             body: JSON.stringify({
+    //                 name: form.name,
+    //                 phone: form.phone,
+    //                 age: Number(form.age)
+    //             }),
+    //         });
 
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || t("error_generic"));
+    //         const data = await res.json();
+    //         if (!res.ok) throw new Error(data.error || t("error_generic"));
 
-            if (res.status === 200 || res.status === 201) {
-                alert(data.message || t("success_registration"));
-                // router.push("/instructions");
-                router.push(`/instructions?traineeId=${data.traineeId || ""}`);
+    //         if (res.status === 200 || res.status === 201) {
+    //             alert(data.message || t("success_registration"));
+    //             // router.push("/instructions");
+    //             router.push(`/instructions?traineeId=${data.traineeId || ""}`);
+    //         }
+    //     } catch (err) {
+    //         alert(err.message);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+
+const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validate()) return;
+
+    if (Number(form.age) < 18) {
+        alert(t("validation_age_min"));
+        return;
+    }
+
+    setLoading(true);
+
+    try {
+        // redirect:false يعني لن يعيد توجيه تلقائي
+        const res = await signIn("credentials", {
+            redirect: false,
+            name: form.name,
+            phone: form.phone,
+            age: Number(form.age),
+        });
+
+        if (res?.error) {
+            alert(res.error);
+        } else {
+            // ✅ بعد النجاح، نجلب الجلسة الحالية
+            const sessionRes = await fetch("/api/auth/session");
+            const session = await sessionRes.json();
+
+            if (session?.user?.isNew) {
+                router.push("/instructions");
+            } else {
+                router.push("/questions");
             }
-        } catch (err) {
-            alert(err.message);
-        } finally {
-            setLoading(false);
         }
-    };
+    } catch (error) {
+        console.error("Login error:", error);
+        alert(t("error_occurred"));
+    } finally {
+        setLoading(false);
+    }
+}; // ← قوس الإغلاق هنا
+        
 
-    return (
-        <div
-            dir={i18n.language === "ar" ? "rtl" : "ltr"}
-            className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-gray-900 transition-colors duration-500"
-        >
-            <motion.div
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-lg rounded-3xl p-6 sm:p-10 w-full max-w-md"
+            return (
+            <div
+                dir={i18n.language === "ar" ? "rtl" : "ltr"}
+                className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-gray-900 transition-colors duration-500"
             >
-                <div className="flex justify-between items-center mb-6">
-                    <LanguageSwitcher />
-                    <ThemeSwitcher />
-                </div>
+                <motion.div
+                    initial={{ opacity: 0, y: 40 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-lg rounded-3xl p-6 sm:p-10 w-full max-w-md"
+                >
+                    <div className="flex justify-between items-center mb-6">
+                        <LanguageSwitcher />
+                        <ThemeSwitcher />
+                    </div>
 
-                <div className="flex flex-col items-center mb-6">
-                    <Dumbbell className="w-16 h-16 text-emerald-500 dark:text-emerald-400 mb-3 animate-pulse" />
-                    <h1 className="text-3xl font-bold text-gray-800 dark:text-white text-center">
-                        {t("register_title")}
-                    </h1>
-                    <p className="text-gray-500 dark:text-gray-300 text-sm mt-2 text-center">
-                        {t("register_description")}
-                    </p>
-                </div>
+                    <div className="flex flex-col items-center mb-6">
+                        <Dumbbell className="w-16 h-16 text-emerald-500 dark:text-emerald-400 mb-3 animate-pulse" />
+                        <h1 className="text-3xl font-bold text-gray-800 dark:text-white text-center">
+                            {t("register_title")}
+                        </h1>
+                        <p className="text-gray-500 dark:text-gray-300 text-sm mt-2 text-center">
+                            {t("register_description")}
+                        </p>
+                    </div>
 
-                <form onSubmit={handleSubmit} className="space-y-5">
+                    <form onSubmit={handleSubmit} className="space-y-5">
 
-                    {/* الاسم */}
-                    <div>
-                        <label className="block text-gray-700 dark:text-gray-300 mb-1">{t("full_name")}</label>
-                        <input
-                            type="text"
-                            name="name"
-                            value={form.name}
-                            onChange={handleChange}
-                            placeholder={t("placeholder_name")}
-                            className={`w-full bg-gray-50 dark:bg-slate-700 border rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-400 outline-none 
+                        {/* الاسم */}
+                        <div>
+                            <label className="block text-gray-700 dark:text-gray-300 mb-1">{t("full_name")}</label>
+                            <input
+                                type="text"
+                                name="name"
+                                value={form.name}
+                                onChange={handleChange}
+                                placeholder={t("placeholder_name")}
+                                className={`w-full bg-gray-50 dark:bg-slate-700 border rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-400 outline-none 
                                 ${errors.name ? "border-red-500" : "border-gray-300 dark:border-slate-600"}`}
-                        />
-                        {errors.name && <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                            <AlertCircle className="w-4 h-4" /> {errors.name}
-                        </p>}
-                    </div>
+                            />
+                            {errors.name && <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                                <AlertCircle className="w-4 h-4" /> {errors.name}
+                            </p>}
+                        </div>
 
-                    {/* العمر */}
-                    <div>
-                        <label className="block text-gray-700 dark:text-gray-300 mb-1">{t("age")}</label>
-                        <div className="relative">
-                            <input
-                                type="number"
-                                name="age"
-                                value={form.age}
-                                onChange={handleChange}
-                                placeholder={t("placeholder_age")}
-                                className={`w-full bg-gray-50 dark:bg-slate-700 border rounded-xl px-4 py-3 pr-10 focus:ring-2 focus:ring-emerald-400 outline-none 
+                        {/* العمر */}
+                        <div>
+                            <label className="block text-gray-700 dark:text-gray-300 mb-1">{t("age")}</label>
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    name="age"
+                                    value={form.age}
+                                    onChange={handleChange}
+                                    placeholder={t("placeholder_age")}
+                                    className={`w-full bg-gray-50 dark:bg-slate-700 border rounded-xl px-4 py-3 pr-10 focus:ring-2 focus:ring-emerald-400 outline-none 
                                     ${errors.age ? "border-red-500" : "border-gray-300 dark:border-slate-600"}`}
-                            />
-                            <Calendar className="absolute top-1/2 -translate-y-1/2 right-3 text-gray-400 dark:text-gray-300" />
+                                />
+                                <Calendar className="absolute top-1/2 -translate-y-1/2 right-3 text-gray-400 dark:text-gray-300" />
+                            </div>
+                            {errors.age && <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                                <AlertCircle className="w-4 h-4" /> {errors.age}
+                            </p>}
                         </div>
-                        {errors.age && <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                            <AlertCircle className="w-4 h-4" /> {errors.age}
-                        </p>}
-                    </div>
 
-                    {/* رقم الجوال */}
-                    <div>
-                        <label className="block text-gray-700 dark:text-gray-300 mb-1">{t("phone")}</label>
-                        <div className="relative">
-                            <input
-                                type="tel"
-                                name="phone"
-                                value={form.phone}
-                                onChange={handleChange}
-                                placeholder={t("placeholder_phone")}
-                                className={`w-full bg-gray-50 dark:bg-slate-700 border rounded-xl px-4 py-3 pr-10 focus:ring-2 focus:ring-emerald-400 outline-none 
+                        {/* رقم الجوال */}
+                        <div>
+                            <label className="block text-gray-700 dark:text-gray-300 mb-1">{t("phone")}</label>
+                            <div className="relative">
+                                <input
+                                    type="tel"
+                                    name="phone"
+                                    value={form.phone}
+                                    onChange={handleChange}
+                                    placeholder={t("placeholder_phone")}
+                                    className={`w-full bg-gray-50 dark:bg-slate-700 border rounded-xl px-4 py-3 pr-10 focus:ring-2 focus:ring-emerald-400 outline-none 
                                     ${errors.phone ? "border-red-500" : "border-gray-300 dark:border-slate-600"}`}
-                            />
-                            <Phone className="absolute top-1/2 -translate-y-1/2 right-3 text-gray-400 dark:text-gray-300" />
+                                />
+                                <Phone className="absolute top-1/2 -translate-y-1/2 right-3 text-gray-400 dark:text-gray-300" />
+                            </div>
+                            {errors.phone && <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                                <AlertCircle className="w-4 h-4" /> {errors.phone}
+                            </p>}
                         </div>
-                        {errors.phone && <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                            <AlertCircle className="w-4 h-4" /> {errors.phone}
-                        </p>}
-                    </div>
 
-                    {/* الموافقة + Tooltip */}
-                    <div className={`relative flex items-center gap-2 bg-gray-100 dark:bg-slate-700 rounded-xl px-3 py-2 border 
+                        {/* الموافقة + Tooltip */}
+                        <div className={`relative flex items-center gap-2 bg-gray-100 dark:bg-slate-700 rounded-xl px-3 py-2 border 
                         ${errors.agreed ? "border-red-500" : "border-gray-300 dark:border-slate-600"}`}>
-                        <input
-                            type="checkbox"
-                            id="agree"
-                            name="agreed"
-                            checked={form.agreed}
-                            onChange={handleChange}
-                            className="w-5 h-5 accent-emerald-500 cursor-pointer"
-                        />
-                        <label htmlFor="agree" className="text-gray-700 dark:text-gray-300 text-sm flex items-center gap-2 cursor-pointer">
-                            <ShieldCheck className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
-                            {t("terms_agreement")}
-                        </label>
+                            <input
+                                type="checkbox"
+                                id="agree"
+                                name="agreed"
+                                checked={form.agreed}
+                                onChange={handleChange}
+                                className="w-5 h-5 accent-emerald-500 cursor-pointer"
+                            />
+                            <label htmlFor="agree" className="text-gray-700 dark:text-gray-300 text-sm flex items-center gap-2 cursor-pointer">
+                                <ShieldCheck className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
+                                {t("terms_agreement")}
+                            </label>
 
-                        {/* أيقونة الاستفهام */}
-                        <div
-                            className="relative ml-2"
-                            onMouseEnter={() => setShowTooltip(true)}
-                            onMouseLeave={() => setShowTooltip(false)}
-                        >
-                            <Info className="w-5 h-5 text-gray-400 hover:text-emerald-500 cursor-pointer" />
-                            {showTooltip && (
-                                <div className="absolute z-20 bg-gray-800 text-white text-xs rounded-lg shadow-lg p-3 w-72 -top-2 right-7 rtl:right-auto rtl:left-7">
-                                    <p className="leading-relaxed">
-                                        {t("tooltip_irb")}
-                                    </p>
+                            {/* أيقونة الاستفهام */}
+                            <div
+                                className="relative ml-2"
+                                onMouseEnter={() => setShowTooltip(true)}
+                                onMouseLeave={() => setShowTooltip(false)}
+                            >
+                                <Info className="w-5 h-5 text-gray-400 hover:text-emerald-500 cursor-pointer" />
+                                {showTooltip && (
+                                    <div className="absolute z-20 bg-gray-800 text-white text-xs rounded-lg shadow-lg p-3 w-72 -top-2 right-7 rtl:right-auto rtl:left-7">
+                                        <p className="leading-relaxed">
+                                            {t("tooltip_irb")}
+                                        </p>
 
-                                </div>
-                            )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                    </div>
 
-                    {/* زر الإرسال */}
-                    <motion.button
-                        whileTap={{ scale: 0.96 }}
-                        whileHover={{ scale: form.agreed ? 1.02 : 1 }}
-                        className={`w-full py-3 rounded-xl text-lg font-semibold transition-all shadow-md 
+                        {/* زر الإرسال */}
+                        <motion.button
+                            whileTap={{ scale: 0.96 }}
+                            whileHover={{ scale: form.agreed ? 1.02 : 1 }}
+                            className={`w-full py-3 rounded-xl text-lg font-semibold transition-all shadow-md 
                             ${form.agreed
-                                ? "bg-emerald-500 hover:bg-emerald-600 text-white"
-                                : "bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed"
-                            }`}
-                        type="submit"
-                        disabled={!form.agreed || loading}
-                    >
-                        {loading ? t("loading") : t("btn_login")}
-                    </motion.button>
-                </form>
-            </motion.div>
-        </div>
-    );
-}
+                                    ? "bg-emerald-500 hover:bg-emerald-600 text-white"
+                                    : "bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed"
+                                }`}
+                            type="submit"
+                            disabled={!form.agreed || loading}
+                        >
+                            {loading ? t("loading") : t("btn_login")}
+                        </motion.button>
+                    </form>
+                </motion.div>
+            </div>
+        );
+    }
+

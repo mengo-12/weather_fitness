@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, createContext } from 'react'
+import { SessionProvider } from "next-auth/react";
 import './globals.css'
 import { Cairo } from 'next/font/google'
 
@@ -32,9 +33,13 @@ export default function RootLayout({ children }) {
     return (
         <html lang="ar" dir="rtl" className={darkMode ? 'dark' : ''}>
             <body className={`${cairo.className} transition-colors duration-500`}>
-                <DarkModeContext.Provider value={{ darkMode, setDarkMode }}>
-                    {children}
-                </DarkModeContext.Provider>
+                <SessionProvider>
+
+                    <DarkModeContext.Provider value={{ darkMode, setDarkMode }}>
+                        {children}
+                    </DarkModeContext.Provider>
+                    
+                </SessionProvider>
             </body>
         </html>
     )

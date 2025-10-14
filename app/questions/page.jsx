@@ -537,6 +537,7 @@ import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/navigation';
 import ThemeSwitcher from '../../app/components/ThemeSwitcher';
 import LanguageSwitcher from '../../app/components/LanguageSwitcher';
+import { useSession } from "next-auth/react";
 
 export default function QuestionsPage() {
     const { t, i18n } = useTranslation('common');
@@ -555,6 +556,8 @@ export default function QuestionsPage() {
     const [loadingWeather, setLoadingWeather] = useState(false);
     const [locationError, setLocationError] = useState('');
     const [weather, setWeather] = useState(null);
+    const { data: session } = useSession();
+    const currentUser = session?.user;
 
     const isEdge = typeof navigator !== 'undefined' && /Edg/i.test(navigator.userAgent);
 
@@ -633,19 +636,56 @@ export default function QuestionsPage() {
         getLocation();
     }, [isEdge]);
 
+    // const handleSubmit = async () => {
+    //     if (!isComplete || !weather) return;
+
+    //     const query = new URLSearchParams({
+    //         answers: JSON.stringify(answers),
+    //         temperature: weather.temperature ?? '',
+    //         humidity: weather.humidity ?? '',
+    //         city: weather.city,
+    //         condition: weather.condition,
+    //     }).toString();
+
+    //     router.push(`/TrainingAssessment?${query}`);
+    // };
+
+
     const handleSubmit = async () => {
         if (!isComplete || !weather) return;
 
-        const query = new URLSearchParams({
-            answers: JSON.stringify(answers),
-            temperature: weather.temperature ?? '',
-            humidity: weather.humidity ?? '',
+        if (!currentUser) {
+            alert("يرجى تسجيل الدخول أولاً");
+            return;
+        }
+
+        const payload = {
+            traineeId: currentUser.id,
+            ...answers,
+            temperature: weather.temperature ?? null,
+            humidity: weather.humidity ?? null,
             city: weather.city,
             condition: weather.condition,
-        }).toString();
+        };
 
-        router.push(`/TrainingAssessment?${query}`);
+        // حفظ في قاعدة البيانات
+        try {
+            const res = await fetch('/api/trainingResults', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error);
+
+            // ثم الانتقال إلى صفحة التقرير
+            const query = new URLSearchParams({ answers: JSON.stringify(answers) }).toString();
+            router.push(`/TrainingAssessment?${query}`);
+        } catch (err) {
+            alert('خطأ أثناء حفظ البيانات: ' + err.message);
+        }
     };
+
 
     // ✅ خيارات الأسئلة مع مفتاح ثابت
     const sleepOptions = [
@@ -865,11 +905,10 @@ export default function QuestionsPage() {
                         disabled={!isComplete || loadingWeather}
                         whileTap={{ scale: 0.96 }}
                         whileHover={{ scale: isComplete ? 1.02 : 1 }}
-                        className={`w-full mt-6 py-3 rounded-2xl font-semibold text-lg transition-all duration-200 shadow-md ${
-                            isComplete && !loadingWeather
-                                ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
-                                : 'bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed'
-                        }`}
+                        className={`w-full mt-6 py-3 rounded-2xl font-semibold text-lg transition-all duration-200 shadow-md ${isComplete && !loadingWeather
+                            ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                            : 'bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed'
+                            }`}
                     >
                         {loadingWeather ? '🔍 جاري تحديد موقعك...' : t('submit')}
                     </motion.button>

@@ -21,4 +21,25 @@ model Trainee {
   agreed    Boolean  @default(false)         // الموافقة على الشروط
   hasSeenInstructions Boolean @default(false)
   createdAt DateTime @default(now())         // تاريخ التسجيل
+  
+  trainingResults TrainingResult[]
+}
+
+
+model TrainingResult {
+  id            String   @id @default(cuid())
+  traineeId     String   @unique 
+  trainee       Trainee  @relation(fields: [traineeId], references: [id])
+  trainingTime  String
+  sleepHours    String
+  readiness     String
+  fieldType     String
+  fieldOther    String?
+  effortLevel   String
+  bodyFeeling   String
+  temperature   Float    @default(0)   // 🔹 لا تكون null
+  humidity      Float    @default(0)
+  city          String   @default("غير محدد")
+  condition     String   @default("غير معروف")
+  createdAt     DateTime @default(now())
 }
