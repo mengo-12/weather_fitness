@@ -575,24 +575,6 @@ export default function QuestionsPage() {
 
     // 🌤️ جلب الطقس عند الدخول
     useEffect(() => {
-        // const fetchWeather = async (lat, lon) => {
-        //     try {
-        //         const res = await fetch(
-        //             `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}&lang=ar`
-        //         );
-        //         const data = await res.json();
-        //         setWeather({
-        //             temperature: data.main?.temp ?? null,
-        //             humidity: data.main?.humidity ?? null,
-        //             city: data.name ?? 'غير محدد',
-        //             condition: data.weather?.[0]?.description ?? '',
-        //         });
-        //     } catch (err) {
-        //         console.error('⚠️ خطأ في جلب بيانات الطقس:', err);
-        //         setWeather({ temperature: null, humidity: null, city: 'غير محدد', condition: '' });
-        //     }
-        // };
-
 
         const fetchWeather = async (lat, lon) => {
             try {
@@ -665,39 +647,6 @@ export default function QuestionsPage() {
 
         getLocation();
     }, [isEdge]);
-
-    // const handleSubmit = async () => {
-    //     if (!isComplete || !weather) return;
-
-    //     const query = new URLSearchParams({
-    //         answers: JSON.stringify(answers),
-    //         temperature: weather.temperature ?? '',
-    //         humidity: weather.humidity ?? '',
-    //         city: weather.city,
-    //         condition: weather.condition,
-    //     }).toString();
-
-    //     router.push(`/TrainingAssessment?${query}`);
-    // };
-
-
-    // const handleSubmit = async () => {
-    //     if (!isComplete || !weather) return;
-
-    //     if (!currentUser) {
-    //         alert("يرجى تسجيل الدخول أولاً");
-    //         return;
-    //     }
-
-    //     const payload = {
-    //         traineeId: currentUser.id,
-    //         ...answers,
-    //         temperature: weather.temperature ?? null,
-    //         humidity: weather.humidity ?? null,
-    //         city: weather.city,
-    //         condition: weather.condition,
-    //     };
-
 
 
     const handleSubmit = async () => {
