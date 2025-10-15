@@ -575,23 +575,53 @@ export default function QuestionsPage() {
 
     // 🌤️ جلب الطقس عند الدخول
     useEffect(() => {
+        // const fetchWeather = async (lat, lon) => {
+        //     try {
+        //         const res = await fetch(
+        //             `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}&lang=ar`
+        //         );
+        //         const data = await res.json();
+        //         setWeather({
+        //             temperature: data.main?.temp ?? null,
+        //             humidity: data.main?.humidity ?? null,
+        //             city: data.name ?? 'غير محدد',
+        //             condition: data.weather?.[0]?.description ?? '',
+        //         });
+        //     } catch (err) {
+        //         console.error('⚠️ خطأ في جلب بيانات الطقس:', err);
+        //         setWeather({ temperature: null, humidity: null, city: 'غير محدد', condition: '' });
+        //     }
+        // };
+
+
         const fetchWeather = async (lat, lon) => {
             try {
-                const res = await fetch(
-                    `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}&lang=ar`
-                );
+                setLoadingWeather(true);
+                setLocationError('');
+
+                const apiKey = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
+                const url = `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${lat},${lon}&lang=${i18n.language}`;
+                const res = await fetch(url);
                 const data = await res.json();
-                setWeather({
-                    temperature: data.main?.temp ?? null,
-                    humidity: data.main?.humidity ?? null,
-                    city: data.name ?? 'غير محدد',
-                    condition: data.weather?.[0]?.description ?? '',
-                });
+
+                if (data?.current) {
+                    setWeather({
+                        temperature: data.current.temp_c,
+                        humidity: data.current.humidity ?? 0,
+                        city: data.location.name ?? 'غير محدد',
+                        condition: data.current.condition.text ?? 'غير معروف'
+                    });
+                } else {
+                    setLocationError('❌ لم يتم الحصول على بيانات الطقس بعد.');
+                }
             } catch (err) {
                 console.error('⚠️ خطأ في جلب بيانات الطقس:', err);
-                setWeather({ temperature: null, humidity: null, city: 'غير محدد', condition: '' });
+                setLocationError('❌ حدث خطأ أثناء جلب بيانات الطقس.');
+            } finally {
+                setLoadingWeather(false);
             }
         };
+
 
         const getLocation = async () => {
             setLoadingWeather(true);
@@ -651,22 +681,39 @@ export default function QuestionsPage() {
     // };
 
 
-    const handleSubmit = async () => {
-        if (!isComplete || !weather) return;
+    // const handleSubmit = async () => {
+    //     if (!isComplete || !weather) return;
 
-        if (!currentUser) {
-            alert("يرجى تسجيل الدخول أولاً");
-            return;
-        }
+    //     if (!currentUser) {
+    //         alert("يرجى تسجيل الدخول أولاً");
+    //         return;
+    //     }
+
+    //     const payload = {
+    //         traineeId: currentUser.id,
+    //         ...answers,
+    //         temperature: weather.temperature ?? null,
+    //         humidity: weather.humidity ?? null,
+    //         city: weather.city,
+    //         condition: weather.condition,
+    //     };
+
+
+
+    const handleSubmit = async () => {
+        if (!isComplete) return alert("يرجى إكمال جميع الأسئلة.");
+        if (!weather) return alert("❌ لم يتم الحصول على بيانات الطقس بعد.");
+        if (!currentUser) return alert("يرجى تسجيل الدخول أولاً");
 
         const payload = {
             traineeId: currentUser.id,
             ...answers,
-            temperature: weather.temperature ?? null,
-            humidity: weather.humidity ?? null,
+            temperature: Number(weather.temperature),
+            humidity: Number(weather.humidity),
             city: weather.city,
             condition: weather.condition,
         };
+
 
         // حفظ في قاعدة البيانات
         try {

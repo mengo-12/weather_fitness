@@ -51,8 +51,10 @@ export async function POST(req) {
             fieldOther: data.fieldOther || null,
             effortLevel: translateAnswer(data.effortLevel, effortMapping),
             bodyFeeling: translateAnswer(data.bodyFeeling, bodyMapping),
-            temperature: data.temperature || 0,
-            humidity: data.humidity || 0,
+            // temperature: Number(data.temperature) || 0,
+            // humidity: Number(data.humidity) || 0,
+            temperature: Number(data.temperature) || 0,
+            humidity: Number(data.humidity) || 0,
             city: data.city || "غير محدد",
             condition: data.condition || "غير معروف"
         };

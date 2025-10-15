@@ -105,10 +105,18 @@ export default function TrainingReport() {
 
     // 🧠 التقييمات
     const assessSleep = (val) => {
-        const hours = Number(val.replace(/\D/g, ''));
-        if (hours < 5) return { rating: t('unsafe'), advice: t('sleepAdviceLow') };
-        if (hours <= 7) return { rating: t('caution'), advice: t('sleepAdviceMed') };
-        return { rating: t('safe'), advice: t('sleepAdviceHigh') };
+        if (!val) return { rating: t('caution'), advice: t('sleepAdviceMed') };
+
+        if (val.includes('أقل من 5'))
+            return { rating: t('unsafe'), advice: t('sleepAdviceLow') };
+
+        if (val.includes('بين 5') || val.includes('٥'))
+            return { rating: t('caution'), advice: t('sleepAdviceMed') };
+
+        if (val.includes('أكثر') || val.includes('٧') || val.includes('8'))
+            return { rating: t('safe'), advice: t('sleepAdviceHigh') };
+
+        return { rating: t('caution'), advice: t('sleepAdviceMed') };
     };
     const assessReadiness = (key) => {
         switch (key) {
