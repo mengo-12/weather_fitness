@@ -1,8 +1,9 @@
 import prisma from '@/lib/prisma';
 
-// 🗺️ دوال الترجمة
+// هذه دالة مساعدة لتحويل المفتاح إلى النص العربي أو الإنجليزي
 const translateAnswer = (key, mapping) => mapping[key] || key;
 
+// مثال خرائط القيم
 const sleepMapping = {
     opt21: 'أقل من 5 ساعات',
     opt22: 'بين 5 و 7 ساعات',
@@ -38,48 +39,37 @@ export async function POST(req) {
         const data = await req.json();
 
         if (!data.traineeId) {
-            return new Response(
-                JSON.stringify({ success: false, error: 'traineeId مطلوب' }),
-                { status: 400 }
-            );
+            return new Response(JSON.stringify({ success: false, error: 'traineeId مطلوب' }), { status: 400 });
         }
 
-        // 🔹 تجهيز البيانات مع منع القيم الفارغة
+        // تحويل المفاتيح إلى نصوص
         const resultData = {
-            trainingTime: data.trainingTime || "غير محدد",
+            trainingTime: data.trainingTime,
             sleepHours: translateAnswer(data.sleepHours, sleepMapping),
             readiness: translateAnswer(data.readiness, readinessMapping),
             fieldType: translateAnswer(data.fieldType, fieldMapping),
-            fieldOther: data.fieldOther || "",
+            fieldOther: data.fieldOther || null,
             effortLevel: translateAnswer(data.effortLevel, effortMapping),
             bodyFeeling: translateAnswer(data.bodyFeeling, bodyMapping),
-            temperature: data.temperature ?? 0,
-            humidity: data.humidity ?? 0,
-            city: data.city?.trim() || "غير محدد",
-            condition: data.condition?.trim() || "غير معروف",
+            temperature: data.temperature || 0,
+            humidity: data.humidity || 0,
+            city: data.city || "غير محدد",
+            condition: data.condition || "غير معروف"
         };
 
-        // 🔁 تحديث إذا كانت موجودة، أو إنشاء جديدة
+        // استخدام upsert لتحديث أو إنشاء
         const result = await prisma.trainingResult.upsert({
-            where: { traineeId: data.traineeId },
-            update: resultData,
-            create: {
-                traineeId: data.traineeId,
-                ...resultData,
-            },
-            include: { trainee: true }, // ✅ حتى نجلب الاسم عند الحاجة لاحقًا
+            where: { traineeId: data.traineeId },  // البحث حسب المتدرب
+            update: resultData,                    // إذا موجود يحدث
+            create: {                              // إذا غير موجود ينشأ
+                trainee: { connect: { id: data.traineeId } },
+                ...resultData
+            }
         });
 
-        return new Response(
-            JSON.stringify({ success: true, result }),
-            { status: 200 }
-        );
-
+        return new Response(JSON.stringify({ success: true, result }), { status: 201 });
     } catch (error) {
-        console.error("❌ Error in trainingResults API:", error);
-        return new Response(
-            JSON.stringify({ success: false, error: error.message }),
-            { status: 500 }
-        );
+        console.error(error);
+        return new Response(JSON.stringify({ success: false, error: error.message }), { status: 500 });
     }
 }

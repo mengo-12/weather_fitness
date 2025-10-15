@@ -177,41 +177,92 @@ export default function TrainingReport() {
         }
     };
 
-    // 🌟 دالة لتصدير النتائج كملف Excel
-    // const exportToExcel = async () => {
-    //     try {
-    //         const res = await fetch('/api/trainingResults/export');
-    //         const blob = await res.blob();
-    //         const url = window.URL.createObjectURL(blob);
-    //         const a = document.createElement('a');
-    //         a.href = url;
-    //         a.download = 'TrainingResults.xlsx';
-    //         document.body.appendChild(a);
-    //         a.click();
-    //         a.remove();
-    //     } catch (err) {
-    //         console.error('⚠️ خطأ في تصدير Excel:', err);
-    //     }
-    // };
-
-
     // 🌟 دالة تصدير مطابقة للصفحة
-    const exportToExcel = () => {
-        const exportData = items.map(item => ({
-            "البند": item.label,
-            "التقييم": item.value.rating,
-            "التعليمات": item.value.advice,
-            "المدينة": city,
-            "درجة الحرارة": `${temperature}°C`,
-            "الرطوبة": `${humidity}%`,
-            "تاريخ التقييم": new Date().toLocaleString("ar-SA")
-        }));
+    const exportAllResults = async () => {
+        try {
+            const res = await fetch('/api/trainingResults/all');
+            const { results } = await res.json();
+            if (!results?.length) return alert("لا توجد نتائج");
 
-        const workbook = XLSX.utils.book_new();
-        const worksheet = XLSX.utils.json_to_sheet(exportData);
-        XLSX.utils.book_append_sheet(workbook, worksheet, "تقرير التدريب");
+            const t = {
+                safe: "آمن",
+                caution: "حذر",
+                unsafe: "غير آمن",
+                allowed: "مسموح",
+                sleepAdviceLow: "- تقليل شدة التمرين.",
+                sleepAdviceMed: "- التدرج في شدة التمرين.\n- مراقبة علامات التعب والإرهاق.",
+                sleepAdviceHigh: "- متابعة التدريب المعتاد.",
+                readinessYesAdvice: "- متابعة التدريب المعتاد.",
+                readinessSomewhatAdvice: "- تدريب معتدل، مراقبة التعب.",
+                readinessNotSureAdvice: "- تدريب خفيف، زيادة فترات الراحة عند الحاجة.",
+                readinessNoAdvice: "- تأجيل التمرين أو استبداله بتمارين استشفاء خفيفة.",
+                fieldOtherAdvice: "- اختيار الحذاء والتجهيزات الواقية، زيادة الانتباه للحركة على الأرضية.",
+                fieldNormalAdvice: "- استخدام الحذاء المناسب لتقليل خطر الإصابات.",
+                effortLowAdvice: "- متابعة التدريب المعتاد.",
+                effortMedAdvice: "- تقليل شدة التدريب عند الحاجة والالتزام بالتعليمات الأساسية.\n- مراقبة التعب والإرهاق.",
+                effortHighAdvice: "- تقليل شدة التدريب والالتزام بالتعليمات الأساسية مع مراقبة التعب والارهاق.",
+                effortMaxAdvice: "- الراحة وإيقاف التدريب وعمل الاستشفاء.",
+                bodyHealthyAdvice: "- متابعة التدريب المعتاد وفق الخطة.",
+                bodyMildTiredAdvice: "- متابعة التدريب مع تقليل شدة بعض التمارين ومراقبة التعب.",
+                bodySomePainAdvice: "- تقليل شدة التدريب، تجنب الحركات الشديدة، زيادة فترات الراحة، ومراقبة أي علامات إصابة.",
+                bodyExhaustedAdvice: "- تأجيل التدريب أو استبداله بتمارين استشفاء خفيفة، مع مراقبة الحالة الصحية والتأكد من عدم تفاقم الإصابة.",
+                tempSafeAdvice: "- متابعة التدريب المعتاد.",
+                tempMedAdvice: "- تقليل شدة التدريب تدريجيًا والالتزام بالتعليمات الأساسية.",
+                tempUnsafeAdvice: "- تغيير وقت التمرين، تقليل شدة التدريب، مراقبة علامات التعب باستمرار.",
+                humiditySafeAdvice: "- استمر في التدريب حسب الخطة المعتادة.",
+                humidityMedAdvice: "- شرب السوائل كل 20 دقيقة، أخذ فترات استراحة قصيرة، تقليل شدة التمرين عند الإرهاق، مراقبة علامات التعب.",
+                humidityUnsafeAdvice: "- تقليل شدة التدريب أو تأجيله، شرب السوائل، أخذ فترات استراحة متكررة، والانتباه للإرهاق."
+            };
 
-        XLSX.writeFile(workbook, "TrainingAssessment.xlsx");
+            // دوال التقييم
+            const assessSleep = val => val.includes("أقل من 5") ? { rating: t.unsafe, advice: t.sleepAdviceLow } : val.includes("بين 5 و 7") ? { rating: t.caution, advice: t.sleepAdviceMed } : { rating: t.safe, advice: t.sleepAdviceHigh };
+            const assessReadiness = val => val === "جاهز جدًا" ? { rating: t.safe, advice: t.readinessYesAdvice } : val === "جاهز جزئيًا" ? { rating: t.safe, advice: t.readinessSomewhatAdvice } : val === "غير متأكد" ? { rating: t.caution, advice: t.readinessNotSureAdvice } : val === "غير جاهز" ? { rating: t.unsafe, advice: t.readinessNoAdvice } : { rating: "-", advice: "-" };
+            const assessField = val => ["أرضية طبيعية", "أرضية صناعية", "أرضية مغطاة"].includes(val) ? { rating: t.safe, advice: t.fieldNormalAdvice } : val === "أخرى" ? { rating: t.caution, advice: t.fieldOtherAdvice } : { rating: "-", advice: "-" };
+            const assessEffort = val => val === "جهد منخفض" ? { rating: t.safe, advice: t.effortLowAdvice } : val === "جهد متوسط" ? { rating: t.allowed, advice: t.effortMedAdvice } : val === "جهد عالي" ? { rating: t.caution, advice: t.effortHighAdvice } : val === "جهد مكثف" ? { rating: t.unsafe, advice: t.effortMaxAdvice } : { rating: "-", advice: "-" };
+            const assessBody = val => val === "شعور جيد" ? { rating: t.safe, advice: t.bodyHealthyAdvice } : val === "شعور متوسط" ? { rating: t.allowed, advice: t.bodyMildTiredAdvice } : val === "ألم خفيف" ? { rating: t.caution, advice: t.bodySomePainAdvice } : val === "إرهاق شديد" ? { rating: t.unsafe, advice: t.bodyExhaustedAdvice } : { rating: "-", advice: "-" };
+            const assessTemperature = val => val <= 30 ? { rating: t.safe, advice: t.tempSafeAdvice } : val <= 34 ? { rating: t.caution, advice: t.tempMedAdvice } : { rating: t.unsafe, advice: t.tempUnsafeAdvice };
+            const assessHumidity = val => val <= 60 ? { rating: t.safe, advice: t.humiditySafeAdvice } : val <= 70 ? { rating: t.caution, advice: t.humidityMedAdvice } : { rating: t.unsafe, advice: t.humidityUnsafeAdvice };
+
+            const sheetData = [["اسم المتدرب", "الهاتف", "العمر", "المدينة",
+                "النوم (التقييم)", "النوم (التعليمات)", "الجاهزية (التقييم)", "الجاهزية (التعليمات)",
+                "نوع الأرضية (التقييم)", "نوع الأرضية (التعليمات)", "مستوى الجهد (التقييم)", "مستوى الجهد (التعليمات)",
+                "الحالة الجسدية (التقييم)", "الحالة الجسدية (التعليمات)", "درجة الحرارة (التقييم)", "درجة الحرارة (التعليمات)",
+                "الرطوبة (التقييم)", "الرطوبة (التعليمات)", "تاريخ التقييم"]];
+
+            for (const r of results) {
+                const sleep = assessSleep(r.sleepHours);
+                const readiness = assessReadiness(r.readiness);
+                const field = assessField(r.fieldType);
+                const effort = assessEffort(r.effortLevel);
+                const body = assessBody(r.bodyFeeling);
+                const tempEval = assessTemperature(r.temperature);
+                const humEval = assessHumidity(r.humidity);
+
+                sheetData.push([
+                    r.trainee?.name || "",
+                    r.trainee?.phone || "",
+                    r.trainee?.age || "",
+                    r.city || "",
+                    sleep.rating, sleep.advice,
+                    readiness.rating, readiness.advice,
+                    field.rating, field.advice,
+                    effort.rating, effort.advice,
+                    body.rating, body.advice,
+                    tempEval.rating, tempEval.advice,
+                    humEval.rating, humEval.advice,
+                    new Date(r.createdAt).toLocaleString("ar-SA")
+                ]);
+            }
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(sheetData);
+            XLSX.utils.book_append_sheet(wb, ws, "نتائج التدريب");
+            XLSX.writeFile(wb, "TrainingResults_All.xlsx");
+
+        } catch (err) {
+            console.error(err);
+            alert("حدث خطأ عند التصدير");
+        }
     };
 
 
@@ -260,7 +311,7 @@ export default function TrainingReport() {
                     <button onClick={() => router.push('/')} className="flex-1 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-md transition-colors duration-200">
                         {t('back')}
                     </button>
-                    <button onClick={exportToExcel} className="flex-1 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-semibold shadow-md transition-colors duration-200 flex items-center justify-center gap-2">
+                    <button onClick={exportAllResults} className="flex-1 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-semibold shadow-md transition-colors duration-200 flex items-center justify-center gap-2">
                         <FaFileExport /> {t('exportExcel')}
                     </button>
                 </div>
