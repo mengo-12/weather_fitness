@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { FaCheckCircle, FaExclamationTriangle, FaTimesCircle, FaRegCircle, FaFileExport } from 'react-icons/fa';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../../app/components/LanguageSwitcher';
+import { useSession } from "next-auth/react";
 import ThemeSwitcher from '../../app/components/ThemeSwitcher';
 import * as XLSX from "xlsx";
 
@@ -16,6 +17,9 @@ export default function TrainingReport() {
     const [reportData, setReportData] = useState(null);
     const [weather, setWeather] = useState(null);
     const [error, setError] = useState('');
+
+    const { data: session } = useSession();
+    const isAdmin = session?.user?.id === "1"; // فقط Admin
 
     // 🌤️ جلب بيانات الطقس
     useEffect(() => {
@@ -104,19 +108,17 @@ export default function TrainingReport() {
     const wind = weather?.wind ?? 0;
 
     // 🧠 التقييمات
-    const assessSleep = (val) => {
-        if (!val) return { rating: t('caution'), advice: t('sleepAdviceMed') };
-
-        if (val.includes('أقل من 5'))
-            return { rating: t('unsafe'), advice: t('sleepAdviceLow') };
-
-        if (val.includes('بين 5') || val.includes('٥'))
-            return { rating: t('caution'), advice: t('sleepAdviceMed') };
-
-        if (val.includes('أكثر') || val.includes('٧') || val.includes('8'))
-            return { rating: t('safe'), advice: t('sleepAdviceHigh') };
-
-        return { rating: t('caution'), advice: t('sleepAdviceMed') };
+    const assessSleep = (key) => {
+        switch (key) {
+            case 'opt21':
+                return { rating: t('unsafe'), advice: t('sleepAdviceLow') };
+            case 'opt22':
+                return { rating: t('caution'), advice: t('sleepAdviceMed') };
+            case 'opt23':
+                return { rating: t('safe'), advice: t('sleepAdviceHigh') };
+            default:
+                return { rating: t('caution'), advice: t('sleepAdviceMed') };
+        }
     };
     const assessReadiness = (key) => {
         switch (key) {
@@ -319,9 +321,14 @@ export default function TrainingReport() {
                     <button onClick={() => router.push('/')} className="flex-1 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-md transition-colors duration-200">
                         {t('back')}
                     </button>
-                    <button onClick={exportAllResults} className="flex-1 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-semibold shadow-md transition-colors duration-200 flex items-center justify-center gap-2">
+                    {/* <button onClick={exportAllResults} className="flex-1 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-semibold shadow-md transition-colors duration-200 flex items-center justify-center gap-2">
                         <FaFileExport /> {t('exportExcel')}
-                    </button>
+                    </button> */}
+                    {isAdmin && (
+                        <button onClick={exportAllResults} className="flex-1 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-semibold shadow-md transition-colors duration-200 flex items-center justify-center gap-2">
+                            <FaFileExport /> {t('exportExcel')}
+                        </button>
+                    )}
                 </div>
             </motion.div>
         </div>

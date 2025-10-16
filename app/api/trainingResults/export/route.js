@@ -182,11 +182,20 @@
 
 import prisma from "@/lib/prisma";
 import * as XLSX from "xlsx";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export const runtime = "nodejs";
 
 export async function GET() {
     try {
+
+        // 🔹 جلب الجلسة
+        const session = await getServerSession(authOptions);
+        if (!session?.user || session.user.role !== "admin") {
+            return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+        }
+
         // ✅ جلب جميع نتائج التدريب مع بيانات المتدربين
         const results = await prisma.trainingResult.findMany({
             include: { trainee: true },

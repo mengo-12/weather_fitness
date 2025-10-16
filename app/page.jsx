@@ -154,7 +154,7 @@ export default function AuthPage() {
 
                 <div className="flex flex-col items-center mb-6">
                     {/* <Dumbbell className="w-16 h-16 text-emerald-500 dark:text-emerald-400 mb-3 animate-pulse" /> */}
-                    <img src="assets/icon2.png" alt="" className="w-50 h-50"/>
+                    <img src="assets/icon2.png" alt="" className="w-50 h-50" />
                     <h1 className="text-3xl font-bold text-gray-800 dark:text-white text-center">
                         {t("register_title")}
                     </h1>
@@ -270,8 +270,19 @@ export default function AuthPage() {
                     >
                         {loading ? t("loading") : t("btn_login")}
                     </motion.button>
+                    {/* زر الانتقال لتسجيل دخول الأدمن */}
+                    <div className="mt-4 text-center">
+                        <button
+                            type="button"
+                            onClick={() => router.push("/admin/login")}
+                            className="text-sm text-emerald-500 hover:underline"
+                        >
+                            تسجيل دخول الأدمن
+                        </button>
+                    </div>
                 </form>
             </motion.div>
+
         </div>
     );
 }

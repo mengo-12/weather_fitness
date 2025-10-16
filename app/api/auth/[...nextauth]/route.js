@@ -35,6 +35,8 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import prisma from "@/lib/prisma";
+import bcrypt from "bcrypt";
+
 
 export const authOptions = {
     providers: [
@@ -75,6 +77,43 @@ export const authOptions = {
                 };
             },
         }),
+
+        // 🔹 تسجيل دخول الأدمن
+        CredentialsProvider({
+            id: "admin",       // ✅ مهم جدًا
+            name: "Admin Login",
+            credentials: {
+                email: { label: "Email", type: "text" },
+                password: { label: "Password", type: "password" },
+            },
+            async authorize(credentials) {
+                console.log("Trying admin login:", credentials);
+                const { email, password } = credentials;
+
+                if (!email || !password) {
+                    console.log("Missing email or password");
+                    return null;
+                }
+
+                const admin = await prisma.user.findUnique({ where: { email } });
+                if (!admin) {
+                    console.log("Admin not found");
+                    return null;
+                }
+
+                if (admin.role !== "admin") {
+                    console.log("User is not admin");
+                    return null;
+                }
+
+                const match = await bcrypt.compare(password, admin.password);
+                console.log("Password match:", match);
+
+                if (!match) return null;
+
+                return { id: admin.id, name: admin.name, email: admin.email, role: "admin" };
+            },
+        }),
     ],
     session: {
         strategy: "jwt",
@@ -85,6 +124,7 @@ export const authOptions = {
                 token.id = user.id;
                 token.name = user.name;
                 token.isNew = user.isNew; // 👈 نحفظ الفلاغ داخل الـ token
+                token.role = user.role || "admin"; // 🔹 إضافة الدور
             }
             return token;
         },
@@ -94,11 +134,14 @@ export const authOptions = {
                     id: token.id,
                     name: token.name,
                     isNew: token.isNew, // 👈 نمررها إلى الواجهة
+                    role: token.role || "admin", // 🔹 إضافة الدور للجلسة
                 };
             }
             return session;
         },
     },
+
+
     secret: process.env.NEXTAUTH_SECRET,
 };
 
