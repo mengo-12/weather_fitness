@@ -107,5 +107,21 @@
         "tempUnsafeAdvice": "- Change training time, reduce intensity, monitor fatigue closely.",
         "humiditySafeAdvice": "- Continue training as planned.",
         "humidityMedAdvice": "- Drink fluids every 20 minutes, take short breaks, reduce intensity when tired, monitor fatigue signs.",
-        "humidityUnsafeAdvice": "- Reduce or postpone training, drink fluids, take frequent breaks, watch for fatigue."
+        "humidityUnsafeAdvice": "- Reduce or postpone training, drink fluids, take frequent breaks, watch for fatigue.",
+
+        "title_admin": "Admin Dashboard",
+        "subtitle": "Sign in to access the control panel",
+        "email": "Email Address",
+        "password": "Password",
+        "placeholder_email": "example@email.com",
+        "placeholder_password": "••••••••",
+        "btn_login_admin": "Login",
+        "loading_admin": "Signing in...",
+        "note_admin": "Admin access only",
+        "tooltip": "Use the admin credentials provided in the system.",
+        "back_home": "Back to home",
+        "error_required": "Please fill all fields.",
+        "error_invalid": "Invalid email or password.",
+        "error_unauthorized": "Unauthorized access.",
+        "error_general": "An error occurred while logging in."
 }

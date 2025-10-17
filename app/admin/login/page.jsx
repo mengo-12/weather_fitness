@@ -1,27 +1,150 @@
+// 'use client';
+
+// import { useState,useEffect  } from "react";
+// import { useRouter } from "next/navigation";
+// import { signIn, useSession } from "next-auth/react";
+// import { AlertCircle } from "lucide-react";
+
+// export default function AdminLoginPage() {
+//     const router = useRouter();
+//     const { data: session } = useSession();
+
+//     const [form, setForm] = useState({ email: "", password: "" });
+//     const [error, setError] = useState("");
+//     const [loading, setLoading] = useState(false);
+
+//     // إذا كان المستخدم مسجل دخول بالفعل كأدمن نوجهه مباشرة
+
+// // ...
+
+// useEffect(() => {
+//     if (session?.user?.role === "admin") {
+//         router.push("/admin/dashboard");
+//     }
+// }, [session, router]);
+
+//     const handleChange = (e) => {
+//         const { name, value } = e.target;
+//         setForm({ ...form, [name]: value });
+//         setError("");
+//     };
+
+//     const handleSubmit = async (e) => {
+//         e.preventDefault();
+//         if (!form.email || !form.password) {
+//             setError("الرجاء ملء جميع الحقول.");
+//             return;
+//         }
+
+//         setLoading(true);
+
+//         try {
+//             const res = await signIn("admin", { // استخدم id
+//                 redirect: false,
+//                 email: form.email,
+//                 password: form.password,
+//             });
+
+//             if (res?.error) {
+//                 setError("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
+//             } else {
+//                 // إعادة جلب الجلسة بعد تسجيل الدخول
+//                 const sessionRes = await fetch("/api/auth/session");
+//                 const sessionData = await sessionRes.json();
+
+//                 if (sessionData?.user?.role === "admin") {
+//                     router.push("/admin/dashboard");
+//                 } else {
+//                     setError("غير مصرح بالدخول.");
+//                 }
+//             }
+//         } catch (err) {
+//             console.error(err);
+//             setError("حدث خطأ أثناء تسجيل الدخول.");
+//         } finally {
+//             setLoading(false);
+//         }
+//     };
+
+//     return (
+//         <div className="min-h-screen flex items-center justify-center bg-gray-100">
+//             <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
+//                 <h1 className="text-2xl font-bold mb-6 text-center">تسجيل دخول الأدمن</h1>
+
+//                 <form onSubmit={handleSubmit} className="space-y-4">
+//                     <div>
+//                         <label className="block text-gray-700 mb-1">البريد الإلكتروني</label>
+//                         <input
+//                             type="email"
+//                             name="email"
+//                             value={form.email}
+//                             onChange={handleChange}
+//                             className="w-full border rounded-xl px-4 py-2 focus:ring-2 focus:ring-emerald-400 outline-none"
+//                         />
+//                     </div>
+
+//                     <div>
+//                         <label className="block text-gray-700 mb-1">كلمة المرور</label>
+//                         <input
+//                             type="password"
+//                             name="password"
+//                             value={form.password}
+//                             onChange={handleChange}
+//                             className="w-full border rounded-xl px-4 py-2 focus:ring-2 focus:ring-emerald-400 outline-none"
+//                         />
+//                     </div>
+
+//                     {error && (
+//                         <p className="text-red-500 text-sm flex items-center gap-1">
+//                             <AlertCircle className="w-4 h-4" /> {error}
+//                         </p>
+//                     )}
+
+//                     <button
+//                         type="submit"
+//                         disabled={loading}
+//                         className={`w-full py-3 rounded-xl text-white font-semibold transition-all 
+//                             ${loading ? "bg-gray-400" : "bg-emerald-500 hover:bg-emerald-600"}`}
+//                     >
+//                         {loading ? "جاري الدخول..." : "تسجيل الدخول"}
+//                     </button>
+//                 </form>
+//             </div>
+//         </div>
+//     );
+// }
+
+
+
+// الكود الاغلى اصلي
+
+
 'use client';
 
-import { useState,useEffect  } from "react";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
-import { AlertCircle } from "lucide-react";
+import { Mail, Lock, AlertCircle, ShieldCheck, Info } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "@/app/components/LanguageSwitcher";
+import ThemeSwitcher from "@/app/components/ThemeSwitcher";
 
 export default function AdminLoginPage() {
     const router = useRouter();
+    const { t, i18n } = useTranslation("admin");
     const { data: session } = useSession();
 
     const [form, setForm] = useState({ email: "", password: "" });
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [showTooltip, setShowTooltip] = useState(false);
 
-    // إذا كان المستخدم مسجل دخول بالفعل كأدمن نوجهه مباشرة
-
-// ...
-
-useEffect(() => {
-    if (session?.user?.role === "admin") {
-        router.push("/admin/dashboard");
-    }
-}, [session, router]);
+    useEffect(() => {
+        if (session?.user?.role === "admin") {
+            router.push("/admin/dashboard");
+        }
+    }, [session, router]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -32,84 +155,152 @@ useEffect(() => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!form.email || !form.password) {
-            setError("الرجاء ملء جميع الحقول.");
+            setError(t("error_required"));
             return;
         }
 
         setLoading(true);
 
         try {
-            const res = await signIn("admin", { // استخدم id
+            const res = await signIn("admin", {
                 redirect: false,
                 email: form.email,
                 password: form.password,
             });
 
             if (res?.error) {
-                setError("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
+                setError(t("error_invalid"));
             } else {
-                // إعادة جلب الجلسة بعد تسجيل الدخول
                 const sessionRes = await fetch("/api/auth/session");
                 const sessionData = await sessionRes.json();
 
                 if (sessionData?.user?.role === "admin") {
                     router.push("/admin/dashboard");
                 } else {
-                    setError("غير مصرح بالدخول.");
+                    setError(t("error_unauthorized"));
                 }
             }
         } catch (err) {
             console.error(err);
-            setError("حدث خطأ أثناء تسجيل الدخول.");
+            setError(t("error_general"));
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
-                <h1 className="text-2xl font-bold mb-6 text-center">تسجيل دخول الأدمن</h1>
+        <div
+            dir={i18n.language === "ar" ? "rtl" : "ltr"}
+            className="min-h-screen flex items-center justify-center p-4 bg-white dark:bg-gray-900 transition-colors duration-500"
+        >
+            <motion.div
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-lg rounded-3xl p-6 sm:p-10 w-full max-w-md"
+            >
+                {/* اللغة والوضع */}
+                <div className="flex justify-between items-center mb-6">
+                    <LanguageSwitcher />
+                    <ThemeSwitcher />
+                </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                {/* العنوان والشعار */}
+                <div className="flex flex-col items-center mb-6">
+                    <img src="/assets/icon2.png" alt="" className="w-24 h-24 mb-3" />
+                    <h1 className="text-3xl font-bold text-gray-800 dark:text-white text-center">
+                        {t("title_admin")}
+                    </h1>
+                    <p className="text-gray-500 dark:text-gray-300 text-sm mt-2 text-center">
+                        {t("subtitle")}
+                    </p>
+                </div>
+
+                {/* نموذج تسجيل الدخول */}
+                <form onSubmit={handleSubmit} className="space-y-5">
+                    {/* البريد الإلكتروني */}
                     <div>
-                        <label className="block text-gray-700 mb-1">البريد الإلكتروني</label>
-                        <input
-                            type="email"
-                            name="email"
-                            value={form.email}
-                            onChange={handleChange}
-                            className="w-full border rounded-xl px-4 py-2 focus:ring-2 focus:ring-emerald-400 outline-none"
-                        />
+                        <label className="block text-gray-700 dark:text-gray-300 mb-1">{t("email")}</label>
+                        <div className="relative">
+                            <input
+                                type="email"
+                                name="email"
+                                value={form.email}
+                                onChange={handleChange}
+                                placeholder={t("placeholder_email")}
+                                className={`w-full bg-gray-50 dark:bg-slate-700 border rounded-xl px-4 py-3 pr-10 focus:ring-2 focus:ring-emerald-400 outline-none 
+                                    ${error ? "border-red-500" : "border-gray-300 dark:border-slate-600"}`}
+                            />
+                            <Mail className="absolute top-1/2 -translate-y-1/2 right-3 text-gray-400 dark:text-gray-300" />
+                        </div>
                     </div>
 
+                    {/* كلمة المرور */}
                     <div>
-                        <label className="block text-gray-700 mb-1">كلمة المرور</label>
-                        <input
-                            type="password"
-                            name="password"
-                            value={form.password}
-                            onChange={handleChange}
-                            className="w-full border rounded-xl px-4 py-2 focus:ring-2 focus:ring-emerald-400 outline-none"
-                        />
+                        <label className="block text-gray-700 dark:text-gray-300 mb-1">{t("password")}</label>
+                        <div className="relative">
+                            <input
+                                type="password"
+                                name="password"
+                                value={form.password}
+                                onChange={handleChange}
+                                placeholder={t("placeholder_password")}
+                                className={`w-full bg-gray-50 dark:bg-slate-700 border rounded-xl px-4 py-3 pr-10 focus:ring-2 focus:ring-emerald-400 outline-none 
+                                    ${error ? "border-red-500" : "border-gray-300 dark:border-slate-600"}`}
+                            />
+                            <Lock className="absolute top-1/2 -translate-y-1/2 right-3 text-gray-400 dark:text-gray-300" />
+                        </div>
                     </div>
 
+                    {/* خطأ */}
                     {error && (
-                        <p className="text-red-500 text-sm flex items-center gap-1">
+                        <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
                             <AlertCircle className="w-4 h-4" /> {error}
                         </p>
                     )}
 
-                    <button
+                    {/* ملاحظة */}
+                    <div
+                        className="flex items-center gap-2 mt-2 cursor-pointer relative"
+                        onMouseEnter={() => setShowTooltip(true)}
+                        onMouseLeave={() => setShowTooltip(false)}
+                    >
+                        <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                        <span className="text-sm text-gray-600 dark:text-gray-300">{t("note_admin")}</span>
+                        {showTooltip && (
+                            <div className="absolute bg-gray-800 text-white text-xs rounded-lg shadow-lg p-3 w-64 -top-16 right-10">
+                                <p>{t("tooltip")}</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* زر الدخول */}
+                    <motion.button
+                        whileTap={{ scale: 0.96 }}
+                        whileHover={{ scale: 1.02 }}
                         type="submit"
                         disabled={loading}
-                        className={`w-full py-3 rounded-xl text-white font-semibold transition-all 
-                            ${loading ? "bg-gray-400" : "bg-emerald-500 hover:bg-emerald-600"}`}
+                        className={`w-full py-3 rounded-xl text-lg font-semibold transition-all shadow-md 
+                            ${loading
+                                ? "bg-gray-400 cursor-not-allowed"
+                                : "bg-emerald-500 hover:bg-emerald-600 text-white"
+                            }`}
                     >
-                        {loading ? "جاري الدخول..." : "تسجيل الدخول"}
-                    </button>
+                        {loading ? t("loading_admin") : t("btn_login_admin")}
+                    </motion.button>
+
+                    {/* العودة */}
+                    <div className="mt-4 text-center">
+                        <button
+                            type="button"
+                            onClick={() => router.push("/")}
+                            className="text-sm text-emerald-500 hover:underline"
+                        >
+                            {t("back_home")}
+                        </button>
+                    </div>
                 </form>
-            </div>
+            </motion.div>
         </div>
     );
 }
