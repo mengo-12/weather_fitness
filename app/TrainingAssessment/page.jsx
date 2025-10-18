@@ -180,7 +180,7 @@ export default function TrainingReport() {
     const getCardStyle = (rating) => {
         switch (rating) {
             case t('safe'): return { bg: 'bg-green-200 dark:bg-green-700', icon: <FaCheckCircle className="text-green-600 dark:text-green-300 w-6 h-6" /> };
-            case t('caution'): return { bg: 'bg-orange-300 dark:bg-orange-600', icon: <FaExclamationTriangle className="text-orange-600 dark:text-orange-300 w-6 h-6" /> };
+            case t('caution'): return { bg: 'bg-orange-300 dark:bg-orange-500', icon: <FaExclamationTriangle className="text-orange-600 dark:text-orange-300 w-6 h-6" /> };
             case t('allowed'): return { bg: 'bg-yellow-200 dark:bg-yellow-400', icon: <FaRegCircle className="text-yellow-600 dark:text-yellow-300 w-6 h-6" /> };
             case t('unsafe'): return { bg: 'bg-red-200 dark:bg-red-700', icon: <FaTimesCircle className="text-red-600 dark:text-red-300 w-6 h-6" /> };
             default: return { bg: 'bg-gray-100 dark:bg-gray-600', icon: null };
