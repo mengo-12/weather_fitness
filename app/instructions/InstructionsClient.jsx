@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import LanguageSwitcher from "../../app/components/LanguageSwitcher";
 import ThemeSwitcher from "../../app/components/ThemeSwitcher";
 
-export default function InstructionsPage({ traineeId: propTraineeId, onNext }) {
+export default function InstructionsClient({ traineeId: propTraineeId, onNext }) {
     const { t, i18n } = useTranslation("common");
     const router = useRouter();
     const searchParams = useSearchParams();

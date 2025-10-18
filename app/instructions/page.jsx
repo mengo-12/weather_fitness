@@ -1,7 +1,11 @@
-// app/instructions/page.jsx
 'use client';
+import { Suspense } from 'react';
 import InstructionsClient from './InstructionsClient';
 
 export default function InstructionsPage() {
-  return <InstructionsClient />;
+    return (
+        <Suspense fallback={<p>Loading...</p>}>
+            <InstructionsClient />
+        </Suspense>
+    );
 }
