@@ -140,8 +140,17 @@ export default function AdminLoginPage() {
     const [loading, setLoading] = useState(false);
     const [showTooltip, setShowTooltip] = useState(false);
 
+    // useEffect(() => {
+    //     if (session?.user?.role === "admin") {
+    //         router.push("/admin/dashboard");
+    //     }
+    // }, [session, router]);
+
     useEffect(() => {
-        if (session?.user?.role === "admin") {
+        if (session?.user && session.user.role !== "admin") {
+            // إذا كانت الجلسة موجودة ولكن ليس أدمن، نسجل خروج المتدرب
+            signOut({ redirect: false }).then(() => router.push("/admin/login"));
+        } else if (session?.user?.role === "admin") {
             router.push("/admin/dashboard");
         }
     }, [session, router]);

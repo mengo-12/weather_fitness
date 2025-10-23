@@ -6,6 +6,7 @@ import { Dumbbell, ShieldCheck, Phone, AlertCircle, Calendar, Info } from "lucid
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from "../app/components/LanguageSwitcher";
 import ThemeSwitcher from "../app/components/ThemeSwitcher";
+import { signOut } from "next-auth/react";
 import { signIn, useSession } from "next-auth/react";
 
 export default function AuthPage() {
@@ -271,12 +272,24 @@ export default function AuthPage() {
                     </motion.button>
                     {/* زر الانتقال لتسجيل دخول الأدمن */}
                     <div className="mt-4 text-center">
-                        <button
+                        {/* <button
                             type="button"
                             onClick={() => router.push("/admin/login")}
                             className="text-sm text-emerald-500 hover:underline"
                         >
                             تسجيل دخول الأدمن
+                        </button> */}
+
+                        <button
+                            type="button"
+                            onClick={async () => {
+                                // مسح أي جلسة حالية للمتدرب قبل الذهاب لصفحة الأدمن
+                                await signOut({ redirect: false });
+                                router.push("/admin/login");
+                            }}
+                            className="text-sm text-emerald-500 hover:underline"
+                        >
+                    تسجيل دخول الأدمن
                         </button>
                     </div>
                 </form>
