@@ -158,9 +158,9 @@ export default function AuthPage() {
                     <h1 className="text-3xl font-bold text-gray-800 dark:text-white text-center">
                         {t("register_title")}
                     </h1>
-                    <p className="text-gray-500 dark:text-gray-300 text-sm mt-2 text-center">
+                    {/* <p className="text-gray-500 dark:text-gray-300 text-sm mt-2 text-center">
                         {t("register_description")}
-                    </p>
+                    </p> */}
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
@@ -174,7 +174,7 @@ export default function AuthPage() {
                             value={form.name}
                             onChange={handleChange}
                             placeholder={t("placeholder_name")}
-                            className={`w-full bg-gray-50 dark:bg-slate-700 border rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-400 outline-none 
+                            className={`w-full bg-gray-50 dark:bg-slate-700 text-black dark:text-white border rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-400 outline-none 
                                 ${errors.name ? "border-red-500" : "border-gray-300 dark:border-slate-600"}`}
                         />
                         {errors.name && <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
@@ -192,7 +192,7 @@ export default function AuthPage() {
                                 value={form.age}
                                 onChange={handleChange}
                                 placeholder={t("placeholder_age")}
-                                className={`w-full bg-gray-50 dark:bg-slate-700 border rounded-xl px-4 py-3 pr-10 focus:ring-2 focus:ring-emerald-400 outline-none 
+                                className={`w-full bg-gray-50 dark:bg-slate-700 text-black dark:text-white border rounded-xl px-4 py-3 pr-10 focus:ring-2 focus:ring-emerald-400 outline-none 
                                     ${errors.age ? "border-red-500" : "border-gray-300 dark:border-slate-600"}`}
                             />
                             <Calendar className="absolute top-1/2 -translate-y-1/2 right-3 text-gray-400 dark:text-gray-300" />
@@ -212,7 +212,7 @@ export default function AuthPage() {
                                 value={form.phone}
                                 onChange={handleChange}
                                 placeholder={t("placeholder_phone")}
-                                className={`w-full bg-gray-50 dark:bg-slate-700 border rounded-xl px-4 py-3 pr-10 focus:ring-2 focus:ring-emerald-400 outline-none 
+                                className={`w-full bg-gray-50 dark:bg-slate-700 text-black dark:text-white border rounded-xl px-4 py-3 pr-10 focus:ring-2 focus:ring-emerald-400 outline-none 
                                     ${errors.phone ? "border-red-500" : "border-gray-300 dark:border-slate-600"}`}
                             />
                             <Phone className="absolute top-1/2 -translate-y-1/2 right-3 text-gray-400 dark:text-gray-300" />
@@ -262,7 +262,7 @@ export default function AuthPage() {
                         whileHover={{ scale: form.agreed ? 1.02 : 1 }}
                         className={`w-full py-3 rounded-xl text-lg font-semibold transition-all shadow-md 
                             ${form.agreed
-                                ? "bg-emerald-500 hover:bg-emerald-600 text-white"
+                                ? "bg-blue-500 hover:bg-blue-600 text-white"
                                 : "bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed"
                             }`}
                         type="submit"

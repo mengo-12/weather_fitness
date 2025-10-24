@@ -32,13 +32,16 @@ export default function RootLayout({ children }) {
 
     return (
         <html lang="ar" dir="rtl" className={darkMode ? 'dark' : ''}>
+            <head>
+                <link rel="icon" href="/favicon.png" sizes="any" />
+            </head>
             <body className={`${cairo.className} transition-colors duration-500`}>
                 <SessionProvider>
 
                     <DarkModeContext.Provider value={{ darkMode, setDarkMode }}>
                         {children}
                     </DarkModeContext.Provider>
-                    
+
                 </SessionProvider>
             </body>
         </html>

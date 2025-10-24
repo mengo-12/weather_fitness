@@ -1,5 +1,5 @@
 {
-        "register_title": "تسجيل المتدربين",
+        "register_title": "تسجيل دخول",
         "register_description": "أدخل معلوماتك للانضمام إلى برنامج التدريب",
         "full_name": "الاسم الكامل",
         "phone": "رقم الجوال",
@@ -7,7 +7,7 @@
         "terms_agreement": "أوافق على المشاركة في الدراسة ",
         "create_account": "إنشاء الحساب",
         "loading": "جاري التحميل...",
-        "btn_login": "تسجيل الدخول أو إنشاء حساب",
+        "btn_login": "التالي",
         "placeholder_name": "أدخل اسمك الكامل",
         "placeholder_age": "أدخل عمرك",
         "placeholder_phone": "05XXXXXXXX",

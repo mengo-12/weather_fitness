@@ -216,7 +216,6 @@ export default function AdminLoginPage() {
 
                 {/* العنوان والشعار */}
                 <div className="flex flex-col items-center mb-6">
-                    <img src="/assets/icon2.png" alt="" className="w-24 h-24 mb-3" />
                     <h1 className="text-3xl font-bold text-gray-800 dark:text-white text-center">
                         {t("title_admin")}
                     </h1>

@@ -566,6 +566,7 @@ export default function QuestionsPage() {
     };
 
     const isComplete =
+        answers.trainingTime !== "00:00" &&
         answers.trainingTime &&
         answers.sleepHours &&
         answers.readiness &&

@@ -1,5 +1,5 @@
 {
-        "register_title": "Trainee Registration",
+        "register_title": "Login",
         "register_description": "Enter your details to join the training program",
         "full_name": "Full Name",
         "phone": "Phone",
@@ -7,7 +7,7 @@
         "terms_agreement": "I agree to participate in the study",
         "create_account": "Create Account",
         "loading": "Creating...",
-        "btn_login": "Login or Register",
+        "btn_login": "Next",
         "placeholder_name": "Enter your full name",
         "placeholder_age": "Enter your age",
         "placeholder_phone": "05XXXXXXXX",
